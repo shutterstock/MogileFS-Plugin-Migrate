@@ -1,0 +1,4 @@
+MANIFEST
+Makefile.PL
+README.md
+lib/MogileFS/Plugin/Migrate.pm

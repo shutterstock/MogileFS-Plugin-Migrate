@@ -1,0 +1,4 @@
+*.gz
+*swp
+Makefile
+local-lib
