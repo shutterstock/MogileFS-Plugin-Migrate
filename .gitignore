@@ -1,4 +1,5 @@
 *.gz
 *swp
 Makefile
+Makefile.old
 local-lib
