@@ -47,7 +47,7 @@ sub load {
 		}
 		$store->condthrow;
 
-		$store->enqueue_for_replication($fidid);
+		$store->enqueue_for_replication($fidid, undef, 1);
 
 		return $self->ok_line;
 	});
