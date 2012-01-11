@@ -70,3 +70,5 @@ sub load {
 
 	return 1;
 }
+
+1;
