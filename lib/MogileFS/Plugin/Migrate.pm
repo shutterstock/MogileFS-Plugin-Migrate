@@ -56,6 +56,9 @@ sub load {
 		if ($@ || $dbh->err) {
 			if ($store->was_duplicate_error) {
 				return $self->err_line('key_exists');
+			} else {
+				my $err = $@ || $dbh->err;
+				Mgd::log('err', __PACKAGE__ . ": $err");
 			}
 		}
 		$store->condthrow;
