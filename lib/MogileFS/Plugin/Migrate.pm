@@ -7,7 +7,7 @@ use MogileFS::Class;
 use MogileFS::FID;
 use MogileFS::Worker::Query;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 sub load {
 
@@ -15,18 +15,22 @@ sub load {
 		my MogileFS::Worker::Query $self = shift;
 		my $args = shift;
 
-		my $src_dmid = $self->check_domain({ domain => delete $args->{src_domain} })
+		my $src_dmid = $self->check_domain({ domain => $args->{src_domain} })
 			or return $self->err_line('domain_not_found');
 
-		my $dst_dmid = $self->check_domain({ domain => delete $args->{dst_domain} })
+		my $dst_dmid = $self->check_domain({ domain => $args->{dst_domain} })
 			or return $self->err_line('domain_not_found');
 
-		my $dst_classid = MogileFS::Class->class_id($dst_dmid, $args->{dst_class})
-			or return $self->err_line('class_not_found');
+		my $dst_classid = MogileFS::Class->class_id($dst_dmid, $args->{dst_class}) || 0;
+
+		# only return error if class was defined, otherwise use "default"
+		return $self->err_line('class_not_found')
+			if $dst_classid == 0 && defined $args->{dst_class};
 
 		my ($src_key, $dst_key) = ($args->{src_key}, $args->{dst_key});
 
-		return $self->err_line('no_key') unless $src_key && $dst_key;
+		return $self->err_line('no_key')
+			unless $src_key && $dst_key;
 
 		my $src_fid = MogileFS::FID->new_from_dmid_and_key($src_dmid, $src_key)
 			or return $self->err_line('unknown_key');
@@ -37,8 +41,17 @@ sub load {
 		my $dbh = $store->dbh;
 
 		eval {
-			$dbh->do('UPDATE file SET dmid=?, classid=?, dkey=? WHERE fid=?',
+			$dbh->do('UPDATE file SET dmid = ?, classid = ?, dkey = ? WHERE fid = ?',
 				undef, $dst_dmid, $dst_classid, $dst_key, $fidid);
+
+			# ignore plugin errors
+			MogileFS::run_global_hook('plugin_file_migrated', {
+				fid         => $fidid,
+				src_dmid    => $src_dmid,
+				dst_classid => $dst_classid,
+				dst_dmid    => $dst_dmid,
+				%$args
+			});
 		};
 		if ($@ || $dbh->err) {
 			if ($store->was_duplicate_error) {
