@@ -1,5 +1,6 @@
 *.gz
 *swp
+MYMETA.yml
 Makefile
 Makefile.old
 local-lib
