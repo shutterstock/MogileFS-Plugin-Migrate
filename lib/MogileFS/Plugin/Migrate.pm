@@ -3,11 +3,10 @@ package MogileFS::Plugin::Migrate;
 use strict;
 use warnings;
 
-use MogileFS::Class;
 use MogileFS::FID;
 use MogileFS::Worker::Query;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 sub load {
 
@@ -21,7 +20,7 @@ sub load {
 		my $dst_dmid = $self->check_domain({ domain => $args->{dst_domain} })
 			or return $self->err_line('domain_not_found');
 
-		my $dst_classid = MogileFS::Class->class_id($dst_dmid, $args->{dst_class}) || 0;
+		my $dst_classid = Mgd::class_factory()->get_by_name($dst_dmid, $args->{dst_class})->{classid} || 0;
 
 		# only return error if class was defined, otherwise use "default"
 		return $self->err_line('class_not_found')
